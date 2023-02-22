@@ -1,0 +1,42 @@
+version: '3'
+
+networks:
+  app-network:
+
+services:    
+  logstash-server:
+    # image to fetch from docker hub
+    build: ./logstash
+    # Mapping of container port to host
+    ports:
+      - "5200:5200"
+    networks:
+      - app-network
+  nginx-server:
+    # Path to dockerfile.
+    # '.' represents the current directory in which
+    # docker-compose.yml is present.
+    build: ./nginx
+    # Mapping of container port to host
+    ports:
+      - "80:80"
+      - "443:443"
+    cpus: 0.5
+    mem_reservation: "10M"
+    mem_limit: "250M"
+    # The depends_on key ensures that the logstash-server service is started before the nginx-server service. A user-defined network called app-network is created, 
+    # and both services are connected to this network.
+    depends_on:
+      - logstash-server
+    # The networks key is used to define the app-network bridge network, which allows the services to communicate with each other using their service names as hostnames.
+    networks:
+      - app-network
+    # The healthcheck section defines a simple health check that checks if the nginx server is running by making a curl request to the server's root URL. 
+    # The health check is run every 10 seconds and has a timeout of 5 seconds. 
+    # If the health check fails, it will be retried 3 times before the nginx service is considered unhealthy.
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:80 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: on-failure
