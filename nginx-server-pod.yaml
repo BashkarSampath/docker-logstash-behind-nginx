@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose.exe convert -f docker-compose.yml
+    kompose.version: 1.28.0 (c4137012e)
+  creationTimestamp: null
+  labels:
+    io.kompose.network/docker-logstash-behind-nginx-app-network: "true"
+    io.kompose.service: nginx-server
+  name: nginx-server
+spec:
+  containers:
+    - image: nginx-server
+      livenessProbe:
+        exec:
+          command:
+            - curl --fail http://localhost:80 || exit 1
+        failureThreshold: 3
+        periodSeconds: 20
+        timeoutSeconds: 5
+      name: nginx-server
+      ports:
+        - containerPort: 80
+        - containerPort: 443
+      resources:
+        limits:
+          memory: "262144e3"
+  restartPolicy: OnFailure
+status: {}
